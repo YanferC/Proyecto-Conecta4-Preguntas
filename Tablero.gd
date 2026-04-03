@@ -2,35 +2,58 @@ extends Node
 
 class_name Board
 
-const ROWS = 6
-const COLUMNS = 7
+const ROWS = 8
+const COLUMNS = 9
 
 var grid = []
-var gravity_direction = Vector2.DOWN
+enum Gravity {
+	DOWN,
+	RIGHT,
+	LEFT,
+	UP
+}
+var gravity_direction = Gravity.DOWN
+var unstable_turns := 0
 
 func _init():
 	create_board()
 
 func create_board():
 	grid.clear()
-	for i in ROWS:
+	for i in range(ROWS):
 		grid.append([])
-		for j in COLUMNS:
+		for j in range(COLUMNS):
 			grid[i].append(null)
 			
 
 func drop_piece(column: int, jugador: Jugador) -> Vector2:
-	if gravity_direction == Vector2.DOWN:
-		for row in range(ROWS - 1, -1, -1):
-			if grid[row][column] == null:
-				grid[row][column] = jugador
-				return Vector2(row, column)
+	
+	match gravity_direction:
+		
+		Gravity.DOWN:
+			for row in range(ROWS - 1, -1, -1):
+				if grid[row][column] == null:
+					grid[row][column] = jugador
+					return Vector2(row, column)
+					
+		Gravity.RIGHT:
+			for col in range(COLUMNS - 1, -1, -1):
+				if grid[column][col] == null:
+					grid[column][col] = jugador
+					return Vector2(column, col)
+					
+		Gravity.LEFT:
+			for col in range(COLUMNS):
+				if grid[column][col] == null:
+					grid[column][col] = jugador
+					return Vector2(column, col)
+
 	return Vector2(-1, -1)
 	
 	
 func check_winner(jugador: Jugador) -> bool:
-	for row in ROWS:
-		for col in COLUMNS:
+	for row in range(ROWS):
+		for col in range(COLUMNS):
 			if check_direction(row, col, 1, 0, jugador):
 				return true
 			if check_direction(row, col, 0, 1, jugador):
@@ -102,3 +125,13 @@ func count_direction(row, col, d_row, d_col, jugador) -> int:
 		c -= d_col
 	
 	return count
+	
+func change_gravity():
+	var values = [Gravity.DOWN, Gravity.RIGHT, Gravity.LEFT]
+	
+	# Evitar que repita la misma
+	values.erase(gravity_direction)
+	
+	gravity_direction = values[randi() % values.size()]
+	
+	print("Nueva gravedad: ", gravity_direction)
