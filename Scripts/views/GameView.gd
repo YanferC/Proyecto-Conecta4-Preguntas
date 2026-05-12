@@ -4,7 +4,7 @@ class_name GameView
 @onready var controller: GameController = $GameController
 @onready var power_sound: AudioStreamPlayer = $PowerSound
 @onready var event_notification: EventNotification = $UI/EventNotification
-@onready var game_hud: GameHUD = $UI/GameHUD  # ← NUEVO
+@onready var game_hud: GameHUD = $UI/GameHud  # ← NUEVO
 
 const CELL_SIZE := 80
 var OFFSET_X := 0.0
@@ -27,16 +27,30 @@ func _ready():
 		push_error("GameController no encontrado!")
 		return
 	
+	if game_hud == null:
+		push_error("❌ GameHUD no encontrado!")
+		return
+	else:
+		print("✅ GameHUD encontrado correctamente")
+	
 	controller.board_changed.connect(_on_board_changed)
 	controller.gravity_event.connect(_on_gravity_event)
 	controller.energy_flash.connect(_on_energy_flash)
+	
+	controller.energy_changed.connect(_on_energy_changed)  # ← NUEVA CONEXIÓN
+	# ✅ VERIFICAR SI SE CONECTÓ
+	print("🔌 Señales conectadas:")
+	print("  - board_changed:", controller.board_changed.get_connections().size())
+	print("  - energy_changed:", controller.energy_changed.get_connections().size())
+	
 	controller.winner.connect(_on_winner)
 	controller.piece_placed.connect(_on_piece_placed)
 	
 	_recalc_offsets()
 	_update_clickable_cells()
-	_update_hud()  # ← NUEVO
+	_update_hud()
 	queue_redraw()
+
 
 func _recalc_offsets():
 	var screen_size = get_viewport_rect().size
@@ -200,6 +214,17 @@ func _on_energy_flash(player_id: int):
 		power_sound.play()
 	if event_notification:
 		event_notification.show_event("ENERGÍA COMPLETA", "Jugador %d puede responder pregunta" % player_id, "⚡")
+
+# ========== MANEJAR CAMBIO DE ENERGÍA ==========
+func _on_energy_changed(player_id: int, new_energy: int):
+	if game_hud:
+		var player = controller.jugador1 if player_id == 1 else controller.jugador2
+		var is_full = player.ability_ready
+		
+		print("🔋 Actualizando HUD - Jugador", player_id, "→ Energía:", new_energy, "Full:", is_full)
+		
+		# Actualizar solo la barra del jugador que cambió
+		game_hud.update_energy(player_id, new_energy, Jugador.MAX_ENERGY, false)
 
 func _on_winner(player_id: int):
 	is_piece_falling = false

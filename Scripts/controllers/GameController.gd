@@ -3,6 +3,7 @@ class_name GameController
 
 signal board_changed
 signal energy_flash(player_id: int)
+signal energy_changed(player_id: int, energy: int)  # ← NUEVA SEÑAL
 signal gravity_event(direction: int)
 signal winner(player_id: int)
 signal reset_done
@@ -62,6 +63,12 @@ func continue_turn_after_animation():
 	var before_energy = current_player.energy
 	board.calculate_energy(pending_row, pending_col, current_player)
 	
+	# ========== EMITIR SEÑAL DE CAMBIO DE ENERGÍA ==========
+	if current_player.energy != before_energy:
+		print("📊 Energía cambiada: Jugador", current_player.id, "→", current_player.energy)
+		emit_signal("energy_changed", current_player.id, current_player.energy)
+	
+	# Si se llenó la energía AHORA
 	if current_player.ability_ready and before_energy < Jugador.MAX_ENERGY:
 		emit_signal("energy_flash", current_player.id)
 	

@@ -31,6 +31,12 @@ func update_turn(player_id: int, player_color: Color):
 
 # ========== ACTUALIZAR ENERGÍA ==========
 func update_energy(player_id: int, energy: int, max_energy: int, is_full: bool):
+	print("🎮 [HUD] update_energy llamado:")
+	print("  Jugador:", player_id)
+	print("  Energía:", energy)
+	print("  Max:", max_energy)
+	print("  Full:", is_full)
+	
 	if player_id == 1:
 		# Animación suave de la barra
 		var tween = create_tween()
@@ -78,8 +84,7 @@ func update_gravity(direction: int):
 	var tween = create_tween()
 	tween.tween_property(gravity_label, "scale", Vector2(1.3, 1.3), 0.15)
 	tween.tween_property(gravity_label, "scale", Vector2(1.0, 1.0), 0.15)
-	tween.tween_property(gravity_label, "rotation", deg_to_rad(360), 0.5)
-	tween.tween_property(gravity_label, "rotation", 0, 0.0)
+	
 
 # ========== ANIMACIÓN DE ENERGÍA COMPLETA ==========
 func play_energy_full_animation(player_id: int):
