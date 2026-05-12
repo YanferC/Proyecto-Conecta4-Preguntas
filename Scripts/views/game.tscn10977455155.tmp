@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://41uw5kjtbsud"]
+
+[ext_resource type="Script" uid="uid://cahbhy5drec0j" path="res://Scripts/views/GameView.gd" id="1_8bu0g"]
+[ext_resource type="Script" uid="uid://cada2smimcxjb" path="res://Scripts/controllers/GameController.gd" id="2_0hlu3"]
+[ext_resource type="PackedScene" uid="uid://capjkekel32jx" path="res://scenes/EventNotification/EventNotification.tscn" id="3_2gmbf"]
+
+[node name="Game" type="Node2D" unique_id=482723624]
+script = ExtResource("1_8bu0g")
+
+[node name="GameController" type="Node" parent="." unique_id=815308059]
+script = ExtResource("2_0hlu3")
+
+[node name="PowerSound" type="AudioStreamPlayer" parent="." unique_id=1869514339]
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1440261120]
+
+[node name="EventNotification" parent="UI" unique_id=701692376 instance=ExtResource("3_2gmbf")]

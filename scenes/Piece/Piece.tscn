@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://ej5p05ivnmpa"]
+
+[ext_resource type="Script" path="res://Scripts/models/piece.gd" id="1_lh71h"]
+[ext_resource type="Texture2D" uid="uid://yu5u7ib8foha" path="res://assets/Piece-pink.png" id="2_lh71h"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_50mkp"]
+radius = 30.0
+
+[node name="Piece" type="Area2D" unique_id=885941002]
+script = ExtResource("1_lh71h")
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=104260383]
+shape = SubResource("CircleShape2D_50mkp")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1076491693]
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1893684681]
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("2_lh71h")

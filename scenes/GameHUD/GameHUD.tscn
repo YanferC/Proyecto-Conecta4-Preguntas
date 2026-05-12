@@ -1,0 +1,271 @@
+[gd_scene format=3 uid="uid://bykbm2ixx3glm"]
+
+[ext_resource type="Script" uid="uid://lg0edhua8gag" path="res://Scripts/UI/GameHUD.gd" id="1_xm3li"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cey0t"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7p278"]
+bg_color = Color(0.49019608, 0.17254902, 0.64705884, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.72156864, 0.39215687, 1, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iqx7m"]
+bg_color = Color(0.2, 0.2, 0.2, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o45jd"]
+bg_color = Color(1, 0.84313726, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qa04o"]
+bg_color = Color(1.274, 0.251, 0.568, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.4117647, 0.7058824, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gp4eo"]
+bg_color = Color(0.2, 0.2, 0.2, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6vx55"]
+bg_color = Color(1, 0.84313726, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="GameHud" type="Control" unique_id=124092403]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_xm3li")
+
+[node name="HeaderPanel" type="Panel" parent="." unique_id=291951239]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = 10.0
+offset_right = 800.0
+offset_bottom = 190.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_cey0t")
+
+[node name="TurnLabel" type="Label" parent="." unique_id=431810412]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 200.0
+offset_top = 15.0
+offset_right = 600.0
+offset_bottom = 65.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "Turno: Jugador 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Player1Panel" type="Panel" parent="." unique_id=1746561125]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 28.0
+offset_top = 67.0
+offset_right = 351.0
+offset_bottom = 146.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_7p278")
+
+[node name="P1NamePanel" type="Label" parent="Player1Panel" unique_id=1836277822]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 94.0
+offset_top = -34.5
+offset_right = 248.0
+offset_bottom = -8.5
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 18
+text = "Jugador 1"
+horizontal_alignment = 1
+
+[node name="P1EnergyBar" type="ProgressBar" parent="Player1Panel" unique_id=740116829]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -138.5
+offset_top = -43.0
+offset_right = 143.5
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/background = SubResource("StyleBoxFlat_iqx7m")
+theme_override_styles/fill = SubResource("StyleBoxFlat_o45jd")
+max_value = 5.0
+show_percentage = false
+
+[node name="P1EnergyText" type="Label" parent="Player1Panel" unique_id=1054120027]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -30.5
+offset_top = -41.0
+offset_right = 22.5
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.84313726, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "⚡ 0/5"
+horizontal_alignment = 1
+
+[node name="Player2Panel" type="Panel" parent="." unique_id=1900179166]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 447.0
+offset_top = 69.0
+offset_right = 770.0
+offset_bottom = 148.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_qa04o")
+
+[node name="P2NamePanel" type="Label" parent="Player2Panel" unique_id=1069587287]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 93.0
+offset_top = -32.5
+offset_right = 247.0
+offset_bottom = -6.5
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 18
+text = "Jugador 2"
+horizontal_alignment = 1
+
+[node name="P2EnergyBar" type="ProgressBar" parent="Player2Panel" unique_id=1290982012]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -138.5
+offset_top = -43.0
+offset_right = 143.5
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/background = SubResource("StyleBoxFlat_gp4eo")
+theme_override_styles/fill = SubResource("StyleBoxFlat_6vx55")
+max_value = 5.0
+show_percentage = false
+
+[node name="P2EnergyText" type="Label" parent="Player2Panel" unique_id=1557900211]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -30.5
+offset_top = -41.0
+offset_right = 22.5
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.84313726, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "⚡ 0/5"
+horizontal_alignment = 1
+
+[node name="GravityLabel" type="Label" parent="." unique_id=1701984852]
+layout_mode = 0
+offset_left = 253.0
+offset_top = 151.0
+offset_right = 553.0
+offset_bottom = 181.0
+theme_override_colors/font_color = Color(0, 1, 0.53333336, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "⬇️ Gravedad: Abajo"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1909349075]
+
+[node name="Label" type="Label" parent="." unique_id=1195308332]
+layout_mode = 0
+offset_left = 378.0
+offset_top = 84.0
+offset_right = 419.0
+offset_bottom = 123.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 28
+text = "VS."
+horizontal_alignment = 1
+vertical_alignment = 1

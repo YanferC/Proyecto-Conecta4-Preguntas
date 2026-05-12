@@ -1,0 +1,80 @@
+[gd_scene format=3 uid="uid://capjkekel32jx"]
+
+[ext_resource type="Script" uid="uid://dh286t1efoh7t" path="res://Scripts/UI/EventNotification.gd" id="1_nqrrv"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_x0u3a"]
+font_size = 48
+font_color = Color(1, 0.84313726, 0, 1)
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 8
+shadow_color = Color(0, 0, 0, 0.003921569)
+shadow_offset = Vector2(4, 4)
+
+[sub_resource type="LabelSettings" id="LabelSettings_nqrrv"]
+font_size = 32
+font_color = Color(1, 0.84313726, 0, 1)
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
+[node name="EventNotification" type="Control" unique_id=701692376]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 265.0
+offset_top = 207.0
+offset_right = -296.0
+offset_bottom = -274.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(300, 110)
+mouse_filter = 1
+script = ExtResource("1_nqrrv")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1810319937]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 5.0
+offset_bottom = 27.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12156863, 0.08627451, 0.2, 1)
+
+[node name="TitleLabel" type="Label" parent="." unique_id=483350193]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -268.0
+offset_top = 9.0
+offset_right = 268.0
+offset_bottom = 76.0
+grow_horizontal = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.003921569)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+text = "⚠️ EVENTO ACTIVADO"
+label_settings = SubResource("LabelSettings_x0u3a")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DescLabel" type="Label" parent="." unique_id=1330533806]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -172.0
+offset_top = -8.0
+offset_right = 194.0
+offset_bottom = 72.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Descripción del evento"
+label_settings = SubResource("LabelSettings_nqrrv")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1544913978]
