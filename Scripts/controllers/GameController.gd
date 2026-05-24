@@ -5,9 +5,11 @@ signal board_changed
 signal energy_flash(player_id: int)
 signal energy_changed(player_id: int, energy: int)  # ← NUEVA SEÑAL
 signal gravity_event(direction: int)
+signal block_event(index: int, gravity_dir: int) 
 signal winner(player_id: int)
 signal reset_done
 signal piece_placed(row: int, col: int, player: Jugador)
+signal rotation_event(pending_lines: Array[Dictionary])
 
 var board: Board
 var jugador1: Jugador
@@ -59,24 +61,43 @@ func try_place_piece_row(row: int):
 	
 	emit_signal("piece_placed", pos.x, pos.y, current_player)
 
+func on_rotation_event(pending_lines: Array[Dictionary]):
+	print("📡 GameController emitiendo señal de rotación")
+	emit_signal("rotation_event", pending_lines)
+	emit_signal("board_changed")
+
+
 func continue_turn_after_animation():
 	var before_energy = current_player.energy
 	board.calculate_energy(pending_row, pending_col, current_player)
 	
-	# ========== EMITIR SEÑAL DE CAMBIO DE ENERGÍA ==========
 	if current_player.energy != before_energy:
 		print("📊 Energía cambiada: Jugador", current_player.id, "→", current_player.energy)
 		emit_signal("energy_changed", current_player.id, current_player.energy)
 	
-	# Si se llenó la energía AHORA
 	if current_player.ability_ready and before_energy < Jugador.MAX_ENERGY:
 		emit_signal("energy_flash", current_player.id)
 	
-	if board.check_winner(current_player):
+	# ========== VERIFICAR SI CONFIRMÓ UNA LÍNEA PENDIENTE ==========
+	if board.check_line_confirmation(pending_row, pending_col, current_player):
+		print("🎉 ¡Línea confirmada!")
 		emit_signal("winner", current_player.id)
 		return
 	
+	# Verificar ganador normal
+	if board.check_winner(current_player):
+		# Si hay líneas pendientes, NO declarar ganador aún
+		if board.pending_lines.size() > 0:
+			print("⚠️ 4 en línea detectado, pero hay líneas pendientes")
+		else:
+			emit_signal("winner", current_player.id)
+			return
+	
 	switch_turn()
+	
+	# Reducir contador de líneas pendientes
+	board.reduce_pending_line_turns()
+	
 	event_manager.next_turn(board, self)
 	emit_signal("board_changed")
 
@@ -89,3 +110,8 @@ func reset_game():
 
 func on_gravity_event(direction):
 	emit_signal("gravity_event", direction)
+
+# ========== CALLBACK PARA EVENTO DE BLOQUEO ==========
+func on_block_event(index: int, gravity_dir: int):
+	emit_signal("block_event", index, gravity_dir)
+	emit_signal("board_changed")  # Actualizar vista

@@ -122,7 +122,7 @@ offset_bottom = 146.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_7p278")
 
-[node name="P1NamePanel" type="Label" parent="Player1Panel" unique_id=1836277822]
+[node name="P1NameLabel" type="Label" parent="Player1Panel" unique_id=1836277822]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
@@ -187,7 +187,7 @@ offset_bottom = 148.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_qa04o")
 
-[node name="P2NamePanel" type="Label" parent="Player2Panel" unique_id=1069587287]
+[node name="P2NameLabel" type="Label" parent="Player2Panel" unique_id=1069587287]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
