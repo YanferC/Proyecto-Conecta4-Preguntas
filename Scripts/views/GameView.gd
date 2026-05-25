@@ -4,7 +4,10 @@ class_name GameView
 @onready var controller: GameController = $GameController
 @onready var power_sound: AudioStreamPlayer = $PowerSound
 @onready var event_notification: EventNotification = $UI/EventNotification
-@onready var game_hud: GameHUD = $UI/GameHud  # ← NUEVO
+@onready var game_hud: GameHUD = $UI/GameHud  
+@onready var question_dialog: QuestionDialog = $UI/QuestionDialog
+@onready var quick_question_button: Button = $UI/QuickQuestionButton
+
 
 const CELL_SIZE := 80
 var OFFSET_X := 0.0
@@ -22,6 +25,13 @@ const CLICKABLE_COLOR := Color(0.2, 0.8, 0.4, 0.2)
 
 var is_rotating: bool = false
 
+var removal_mode_active: bool = false
+var line_removal_mode_active: bool = false
+var waiting_for_power_selection: bool = false
+var current_player_using_power: Jugador = null
+var highlight_removable_pieces: Array[Vector2i] = []
+var skip_opponent_turn_active: bool = false
+
 func _ready():
 	await get_tree().process_frame
 	
@@ -34,6 +44,13 @@ func _ready():
 		return
 	else:
 		print("✅ GameHUD encontrado correctamente")
+		
+	# Conectar botón de pregunta rápida
+	quick_question_button.pressed.connect(_on_quick_question_button_pressed)
+	
+	# Conectar señales del diálogo
+	question_dialog.answer_selected.connect(_on_question_answered)
+	question_dialog.question_skipped.connect(_on_question_skipped)
 	
 	controller.board_changed.connect(_on_board_changed)
 	controller.gravity_event.connect(_on_gravity_event)
@@ -49,6 +66,31 @@ func _ready():
 	controller.rotation_event.connect(_on_rotation_event)
 	controller.winner.connect(_on_winner)
 	controller.piece_placed.connect(_on_piece_placed)
+	controller.mandatory_question_required.connect(_on_mandatory_question_required)
+	controller.jugador1.power_unlocked.connect(_on_power_unlocked)
+	controller.jugador2.power_unlocked.connect(_on_power_unlocked)
+	controller.reset_done.connect(_on_reset_done)
+	
+	# Configurar PowerManager
+	if controller and controller.power_manager:
+		controller.power_manager.setup(controller.board, controller, self)
+
+	if not controller.power_used.is_connected(_on_power_used):
+		controller.power_used.connect(_on_power_used)
+	
+	# Crear diálogo de selección de poder si no existe
+	if not has_node("PowerSelectionDialog"):
+		var power_dialog_scene = preload("res://scenes/PowerSlectionMenu/PowerSelectionDialog.tscn")
+		var power_dialog = power_dialog_scene.instantiate()
+	
+		if power_dialog is PowerSelectionDialog:
+			add_child(power_dialog)
+			controller.power_selection_dialog = power_dialog
+			power_dialog.power_selected.connect(_on_power_selected)
+			power_dialog.dialog_closed.connect(_on_power_dialog_closed)
+			print("✅ PowerSelectionDialog instanciado correctamente")
+		else:
+			push_error("❌ La escena PowerSelectionDialog no tiene el script PowerSelectionDialog.gd")
 	
 	_recalc_offsets()
 	_update_clickable_cells()
@@ -110,8 +152,84 @@ func is_cell_clickable(cell: Vector2i) -> bool:
 	return clickable_cells.has(cell)
 
 func _input(event):
+	
 	if is_piece_falling or is_rotating:
 		return
+	
+	# Modo eliminar ficha
+	if removal_mode_active and event is InputEventMouseButton and event.pressed:
+		var mouse_pos = event.position
+		var clicked_cell = get_cell_at_position(mouse_pos)
+		var clicked_row = clicked_cell.y
+		var clicked_col = clicked_cell.x
+		
+		if clicked_cell.x >= 0 and clicked_cell.y >= 0:
+			var board = controller.board
+			if board.grid[clicked_row][clicked_col] != null:
+				await _highlight_selected_piece(clicked_row, clicked_col)
+				controller.power_manager.remove_specific_piece(clicked_row, clicked_col)
+				rebuild_pieces_from_board()
+				
+				removal_mode_active = false
+				current_player_using_power = null
+				
+				if event_notification:
+					event_notification.show_event(
+						"🗑️ FICHA ELIMINADA",
+						"en [" + str(clicked_row + 1) + "," + str(clicked_col + 1) + "]",
+						"🗑️"
+					)
+				
+				_continue_after_power()
+				return
+			
+	# Modo eliminar línea
+	if line_removal_mode_active and event is InputEventMouseButton and event.pressed:
+		var mouse_pos = event.position
+		
+		# Detectar si hizo clic en el área izquierda (para filas)
+		if mouse_pos.x >= OFFSET_X - 40 and mouse_pos.x <= OFFSET_X - 5:
+			var row_index = int((mouse_pos.y - OFFSET_Y) / CELL_SIZE)
+			if row_index >= 0 and row_index < Board.ROWS:
+				await _highlight_selected_line(row_index, false)
+				controller.power_manager.remove_line(row_index, false)
+				rebuild_pieces_from_board()
+				
+				line_removal_mode_active = false
+				current_player_using_power = null
+				
+				if event_notification:
+					event_notification.show_event(
+						"📏 FILA ELIMINADA",
+						"Fila " + str(row_index + 1) + " eliminada",
+						"🗑️"
+					)
+				
+				_continue_after_power()
+				return
+		
+		# Detectar si hizo clic en el área superior (para columnas)
+		if mouse_pos.y >= OFFSET_Y - 40 and mouse_pos.y <= OFFSET_Y - 5:
+			var col_index = int((mouse_pos.x - OFFSET_X) / CELL_SIZE)
+			if col_index >= 0 and col_index < Board.COLUMNS:
+				await _highlight_selected_line(col_index, true)
+				controller.power_manager.remove_line(col_index, true)
+				rebuild_pieces_from_board()
+				
+				line_removal_mode_active = false
+				current_player_using_power = null
+				
+				if event_notification:
+					event_notification.show_event(
+						"📏 COLUMNA ELIMINADA",
+						"Columna " + str(col_index + 1) + " eliminada",
+						"🗑️"
+					)
+				
+				_continue_after_power()
+				return
+			
+	# Juego normal
 	if event is InputEventMouseButton and event.pressed:
 		var mouse_pos = event.position
 		var clicked_cell = get_cell_at_position(mouse_pos)
@@ -172,7 +290,34 @@ func _draw():
 			draw_rect(Rect2(x, y, CELL_SIZE, CELL_SIZE), Color(1, 0.84, 0, 0.4), true)
 			draw_rect(Rect2(x + 5, y + 5, CELL_SIZE - 10, CELL_SIZE - 10), Color(1, 1, 0, 0.6), false, 3)
 	
-	
+	# ========== RESALTAR FICHAS ELIMINABLES EN MODO ELIMINACIÓN ==========
+	if removal_mode_active:
+		for row in range(Board.ROWS):
+			for col in range(Board.COLUMNS):
+				if controller.board.grid[row][col] != null:
+					var x = OFFSET_X + col * CELL_SIZE
+					var y = OFFSET_Y + row * CELL_SIZE
+					# Dibujar borde rojo brillante alrededor de fichas eliminables
+					draw_rect(Rect2(x, y, CELL_SIZE, CELL_SIZE), Color(1, 0.2, 0.2, 0.5), false, 4)
+					# Dibujar icono de "X"
+					var center = Vector2(x + CELL_SIZE / 2, y + CELL_SIZE / 2)
+					draw_string(ThemeDB.fallback_font, center - Vector2(8, 8), "🗑️", HORIZONTAL_ALIGNMENT_CENTER, -1, 24, Color.RED)
+
+	# ========== RESALTAR LÍNEAS ELIMINABLES EN MODO ELIMINACIÓN DE LÍNEA ==========
+	if line_removal_mode_active:
+		# Resaltar filas (lado izquierdo)
+		for row in range(Board.ROWS):
+			var x = OFFSET_X - 30
+			var y = OFFSET_Y + row * CELL_SIZE
+			draw_rect(Rect2(x, y, 25, CELL_SIZE), Color(1, 0.5, 0, 0.6), true)
+			draw_string(ThemeDB.fallback_font, Vector2(x + 5, y + CELL_SIZE / 2 + 5), str(row + 1), HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color.WHITE)
+		
+		# Resaltar columnas (lado superior)
+		for col in range(Board.COLUMNS):
+			var x = OFFSET_X + col * CELL_SIZE
+			var y = OFFSET_Y - 30
+			draw_rect(Rect2(x, y, CELL_SIZE, 25), Color(1, 0.5, 0, 0.6), true)
+			draw_string(ThemeDB.fallback_font, Vector2(x + CELL_SIZE / 2 - 5, y + 18), str(col + 1), HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color.WHITE)
 	
 	for row in range(Board.ROWS):
 		for col in range(Board.COLUMNS):
@@ -215,6 +360,9 @@ func _update_hud():
 		game_hud.update_energy(1, controller.jugador1.energy, Jugador.MAX_ENERGY, controller.jugador1.ability_ready)
 		game_hud.update_energy(2, controller.jugador2.energy, Jugador.MAX_ENERGY, controller.jugador2.ability_ready)
 		game_hud.update_gravity(controller.board.gravity_direction)
+		update_power_button_visibility()
+
+
 
 func _on_board_changed():
 	_update_clickable_cells()
@@ -263,10 +411,14 @@ func _on_energy_flash(player_id: int):
 	if game_hud:
 		var player = controller.jugador1 if player_id == 1 else controller.jugador2
 		game_hud.update_energy(player_id, player.energy, Jugador.MAX_ENERGY, true)
+	
+	# Mostrar pregunta obligatoria
+	var question = controller.question_system.get_random_mandatory_question()
+	question_dialog.show_question(question, false)  # false = NO permite saltar
+	
 	if power_sound:
 		power_sound.play()
-	if event_notification:
-		event_notification.show_event("ENERGÍA COMPLETA", "Jugador %d puede responder pregunta" % player_id, "⚡")
+
 
 # ========== MANEJAR EVENTO DE ROTACIÓN ==========
 # ========== MANEJAR EVENTO DE ROTACIÓN CON ANIMACIÓN ==========
@@ -386,7 +538,7 @@ func regenerate_all_pieces_animated(pending_lines: Array[Dictionary]):
 		for i in range(new_positions.size()):
 			var new_data = new_positions[i]
 			if new_data.player == old_data.player and not pieces_animated.has(piece):
-				# ✅ CREAR TWEEN CORRECTAMENTE
+				# CREAR TWEEN CORRECTAMENTE
 				if is_instance_valid(piece):
 					var tween = create_tween()
 					tween.set_ease(Tween.EASE_OUT)
@@ -409,7 +561,7 @@ func regenerate_all_pieces_animated(pending_lines: Array[Dictionary]):
 	for piece in pieces_to_remove:
 		pieces.erase(piece)
 		
-		# ✅ VERIFICAR QUE LA PIEZA EXISTE ANTES DE ANIMAR
+		# VERIFICAR QUE LA PIEZA EXISTE ANTES DE ANIMAR
 		if is_instance_valid(piece):
 			var tween = create_tween()
 			tween.tween_property(piece, "modulate:a", 0.0, 0.3)
@@ -453,7 +605,7 @@ func spawn_piece_with_fall_animation(row: int, col: int, player: Jugador, final_
 	if piece.sprite:
 		piece.sprite.modulate = player.color
 	
-	# ✅ ESPERAR UN FRAME ANTES DE ANIMAR
+	# ESPERAR UN FRAME ANTES DE ANIMAR
 	await get_tree().process_frame
 	
 	# Animar caída con efecto de rebote
@@ -477,7 +629,7 @@ func highlight_pending_lines(pending_lines: Array[Dictionary]):
 			# Buscar la ficha visual en esa posición
 			for piece in pieces:
 				if piece.grid_row == cell.x and piece.grid_col == cell.y:
-					# ✅ VERIFICAR VALIDEZ ANTES DE ANIMAR
+					# VERIFICAR VALIDEZ ANTES DE ANIMAR
 					if is_instance_valid(piece) and is_instance_valid(piece.sprite):
 						var tween = create_tween()
 						tween.set_loops(3)  # Repetir 3 veces
@@ -495,6 +647,434 @@ func _on_energy_changed(player_id: int, new_energy: int):
 		
 		# Actualizar solo la barra del jugador que cambió
 		game_hud.update_energy(player_id, new_energy, Jugador.MAX_ENERGY, false)
+
+# ========== MANEJAR PREGUNTA RÁPIDA ==========
+func _on_quick_question_button_pressed():
+	if is_piece_falling or is_rotating:
+		return
+	
+	var player = controller.current_player
+	
+	# VERIFICAR SI ES UN REINTENTO DE PODER BLOQUEADO
+	if player.ability_ready and player.power_blocked and player.can_retry_with_quick:
+		print("🔄 Usando pregunta rápida para reintentar poder")
+		player.can_retry_with_quick = false  # Solo un reintento
+		
+		var question = controller.question_system.get_random_mandatory_question()
+		question_dialog.show_question(question, false)
+	else:
+		# Pregunta rápida normal
+		var question = controller.question_system.get_random_quick_question()
+		question_dialog.show_question(question, true)
+
+# ========== MANEJAR RESPUESTA DE PREGUNTA ==========
+func _on_question_answered(is_correct: bool):
+	var player = controller.current_player
+	
+	# CASO 1: Pregunta obligatoria (primera vez con energía llena)
+	if player.ability_ready and player.power_blocked and player.can_retry_with_quick:
+		if is_correct:
+			print("✅ Pregunta obligatoria correcta - Abriendo selección de poder")
+			player.power_blocked = false  # Desbloquear temporalmente
+			
+			# Mostrar diálogo de selección de poder
+			if controller.power_selection_dialog:
+				controller.power_selection_dialog.show_dialog(player.id)
+			else:
+				push_error("❌ PowerSelectionDialog no encontrado")
+			
+			if event_notification:
+				event_notification.show_event(
+					"¡RESPUESTA CORRECTA!",
+					"Elige tu poder",
+					"✅"
+				)
+		else:
+			print("❌ Pregunta obligatoria incorrecta - Poder bloqueado")
+			player.block_power()
+			
+			if event_notification:
+				event_notification.show_event(
+					"RESPUESTA INCORRECTA",
+					"Poder bloqueado. Usa pregunta rápida para reintentar",
+					"❌"
+				)
+			
+			# Continuar turno después de fallar
+			_continue_turn_after_question()
+	
+	# CASO 2: Reintento con pregunta rápida
+	elif player.ability_ready and player.power_blocked and not player.can_retry_with_quick:
+		if is_correct:
+			print("🔓 Reintento exitoso - Abriendo selección de poder")
+			player.power_blocked = false
+			
+			if controller.power_selection_dialog:
+				controller.power_selection_dialog.show_dialog(player.id)
+			
+			if event_notification:
+				event_notification.show_event(
+					"¡PODER DESBLOQUEADO!",
+					"Elige tu poder",
+					"🔓"
+				)
+		else:
+			print("❌ Reintento fallido - Poder perdido definitivamente")
+			player.block_power()
+			
+			if event_notification:
+				event_notification.show_event(
+					"¡PODER PERDIDO!",
+					"Energía reiniciada a 0",
+					"❌"
+				)
+			
+			_continue_turn_after_question()
+	
+	# CASO 3: Pregunta rápida normal (+1 energía)
+	else:
+		if is_correct:
+			player.add_energy(1)
+			
+			if event_notification:
+				event_notification.show_event(
+					"¡RESPUESTA CORRECTA!",
+					"+1 Energía",
+					"✅"
+				)
+		else:
+			if event_notification:
+				event_notification.show_event(
+					"RESPUESTA INCORRECTA",
+					"Sin recompensa",
+					"❌"
+				)
+	
+	_update_hud()
+
+
+func _on_question_skipped():
+	print("⏭ Pregunta saltada")
+
+# ========== ENTRAR EN MODO ELIMINACIÓN DE FICHA ==========
+func enter_piece_removal_mode(player: Jugador):
+	removal_mode_active = true
+	current_player_using_power = player
+	
+	if event_notification:
+		event_notification.show_event(
+			"🔪 MODO ELIMINACIÓN",
+			"Haz clic en una ficha para eliminarla",
+			"🗑️"
+		)
+
+# ========== ENTRAR EN MODO ELIMINACIÓN DE FILA/COLUMNA ==========
+func enter_line_removal_mode(player: Jugador):
+	line_removal_mode_active = true
+	current_player_using_power = player
+	
+	if event_notification:
+		event_notification.show_event(
+			"📏 MODO ELIMINAR LÍNEA",
+			"Haz clic en una fila (izquierda) o columna (arriba) para eliminarla",
+			"🗑️"
+		)
+
+# ========== MANEJAR CUANDO SE USA UN PODER ==========
+func _on_power_used(power_type: int, player_id: int):
+	if event_notification:
+		var power_name = ""
+		match power_type:
+			Jugador.PowerType.STEAL_ENERGY:
+				power_name = "ROBO DE ENERGÍA"
+			Jugador.PowerType.REMOVE_PIECE:
+				power_name = "ELIMINAR FICHA"
+			Jugador.PowerType.REMOVE_LINE:
+				power_name = "ELIMINAR LÍNEA"
+			Jugador.PowerType.SKIP_TURN:
+				power_name = "SALTAR TURNO"
+		
+		event_notification.show_event(
+			"¡PODER USADO!",
+			"Jugador %d usó %s" % [player_id, power_name],
+			"💥"
+		)
+
+# ========== MANEJAR SELECCIÓN DE PODER ==========
+func _on_power_selected(power_type: int, power_level: int):
+	print("⚡ Poder seleccionado - EJECUTANDO INMEDIATAMENTE:", Jugador.PowerType.keys()[power_type])
+	
+	var player = controller.current_player
+	var rival = controller.jugador1 if player == controller.jugador2 else controller.jugador2
+	
+	# Guardar el poder seleccionado
+	player.unlocked_power = power_type
+	player.unlocked_power_level = power_level
+	
+	# EJECUTAR EL PODER INMEDIATAMENTE
+	match power_type:
+		Jugador.PowerType.STEAL_ENERGY:
+			var stolen = min(2, rival.energy)
+			
+			# El rival pierde energía
+			rival.energy = max(0, rival.energy - stolen)
+			rival.ability_ready = rival.energy >= Jugador.MAX_ENERGY
+			
+			# El usuario "gasta" su energía, pero conserva lo robado
+			player.energy = stolen
+			player.ability_ready = false
+			player.power_blocked = false
+			player.can_retry_with_quick = true
+			
+			rival.energy_updated.emit(rival.id, rival.energy)
+			player.energy_updated.emit(player.id, player.energy)
+			
+			if event_notification:
+				event_notification.show_event(
+					"¡ENERGÍA ROBADA!",
+					"Jugador %d robó %d energía a Jugador %d" % [player.id, stolen, rival.id],
+					"⚡🔫"
+				)
+			
+			_continue_after_power()
+		
+		Jugador.PowerType.REMOVE_PIECE:
+			player.energy = 0
+			player.energy_updated.emit(player.id, player.energy)
+			player.ability_ready = false
+			player.power_blocked = false
+			player.can_retry_with_quick = true
+			
+			if event_notification:
+				event_notification.show_event(
+					"🔪 ELIMINAR FICHA",
+					"Haz clic en una ficha para eliminarla",
+					"🗑️"
+				)
+			
+			removal_mode_active = true
+			current_player_using_power = player
+		
+		Jugador.PowerType.REMOVE_LINE:
+			player.energy = 0
+			player.energy_updated.emit(player.id, player.energy)
+			player.ability_ready = false
+			player.power_blocked = false
+			player.can_retry_with_quick = true
+			
+			if event_notification:
+				event_notification.show_event(
+					"📏 ELIMINAR LÍNEA",
+					"Haz clic en una fila (izquierda) o columna (arriba) para eliminarla",
+					"🗑️"
+				)
+			
+			line_removal_mode_active = true
+			current_player_using_power = player
+		
+		Jugador.PowerType.SKIP_TURN:
+			skip_opponent_turn_active = true
+			
+			player.energy = 0
+			player.energy_updated.emit(player.id, player.energy)
+			player.ability_ready = false
+			player.power_blocked = false
+			player.can_retry_with_quick = true
+			
+			if event_notification:
+				event_notification.show_event(
+					"⏭️ TURNO SALTADO",
+					"El rival pierde su turno. Juegas otra vez.",
+					"⏭️"
+				)
+			
+			_continue_after_power()
+	
+	# Resetear estado del poder (ya se usó)
+	player.unlocked_power = Jugador.PowerType.NONE
+	player.unlocked_power_level = Jugador.PowerLevel.NONE
+	player.ability_ready = false
+	player.power_blocked = false
+	player.can_retry_with_quick = true
+	
+	# Actualizar UI
+	_update_hud()
+
+
+# ========== MOSTRAR/OCULTAR BOTÓN DE USAR PODER ==========
+func update_power_button_visibility():
+	if not has_node("UI/UsePowerButton"):
+		return
+	
+	var btn = $UI/UsePowerButton
+	var player = controller.current_player
+	
+	if player.unlocked_power != Jugador.PowerType.NONE and not player.power_blocked:
+		btn.visible = true
+		
+		var power_name = ""
+		match player.unlocked_power:
+			Jugador.PowerType.STEAL_ENERGY:
+				power_name = "⚡ Robar Energía"
+			Jugador.PowerType.REMOVE_PIECE:
+				power_name = "🗑️ Eliminar Ficha"
+			Jugador.PowerType.REMOVE_LINE:
+				power_name = "📏 Eliminar Línea"
+			Jugador.PowerType.SKIP_TURN:
+				power_name = "⏭️ Saltar Turno"
+		
+		btn.text = "💥 " + power_name
+	else:
+		btn.visible = false
+
+
+
+# ========== BOTÓN PARA USAR PODER (agregar en GameHUD) ==========
+func _on_use_power_button_pressed():
+	if controller and not is_piece_falling and not is_rotating:
+		var result = controller.use_current_player_power()
+		
+		if result:
+			update_power_button_visibility()
+			_update_hud()
+
+# ========== MANEJAR CIERRE DEL DIÁLOGO DE PODER ==========
+func _on_power_dialog_closed():
+	print("🔒 Diálogo de poder cerrado")
+	# Aquí puedes reanudar el juego si es necesario
+	waiting_for_power_selection = false
+
+func _on_mandatory_question_required(player_id: int):
+	print("❗ Pregunta obligatoria para jugador", player_id)
+	
+	# Mostrar pregunta obligatoria (NO permite saltar)
+	var question = controller.question_system.get_random_mandatory_question()
+	question_dialog.show_question(question, false)
+
+# ========== CONTINUAR TURNO DESPUÉS DE RESPONDER PREGUNTA ==========
+func _continue_turn_after_question():
+	var board = controller.board
+	
+	# Verificar ganador
+	if board.check_winner(controller.current_player):
+		if board.pending_lines.size() > 0:
+			print("⚠️ 4 en línea detectado, pero hay líneas pendientes")
+		else:
+			controller.winner.emit(controller.current_player.id)
+			return
+	
+	# Cambiar turno
+	controller.switch_turn()
+	board.reduce_pending_line_turns()
+	controller.event_manager.next_turn(board, controller)
+	controller.board_changed.emit()
+	_update_hud()
+
+# ========== MANEJAR CUANDO SE DESBLOQUEA PODER ==========
+func _on_power_unlocked(power_type: int):
+	# Este método ya no es necesario porque abrimos el diálogo directamente
+	# después de responder correctamente la pregunta obligatoria
+	pass
+
+
+# ========== CONTINUAR TURNO DESPUÉS DE USAR PODER ==========
+func _continue_after_power():
+	print("➡️ Continuando turno después de poder")
+	
+	var board = controller.board
+	
+	if board.check_winner(controller.current_player):
+		if board.pending_lines.size() > 0:
+			print("⚠️ 4 en línea detectado, pero hay líneas pendientes")
+		else:
+			controller.winner.emit(controller.current_player.id)
+			return
+	
+	if not line_removal_mode_active and not removal_mode_active:
+		if skip_opponent_turn_active:
+			print("⏭️ El rival pierde el turno; juega de nuevo el mismo jugador")
+			skip_opponent_turn_active = false
+		else:
+			controller.switch_turn()
+		
+		board.reduce_pending_line_turns()
+		controller.event_manager.next_turn(board, controller)
+	
+	controller.board_changed.emit()
+	_update_hud()
+	
+	removal_mode_active = false
+	line_removal_mode_active = false
+	current_player_using_power = null
+
+func rebuild_pieces_from_board():
+	clear_pieces()
+	
+	var board = controller.board
+	if board == null:
+		return
+	
+	for row in range(Board.ROWS):
+		for col in range(Board.COLUMNS):
+			var player = board.grid[row][col]
+			if player != null:
+				var piece = PieceScene.instantiate() as Piece
+				add_child(piece)
+				pieces.append(piece)
+				
+				piece.jugador = player
+				piece.grid_row = row
+				piece.grid_col = col
+				piece.is_falling = false
+				piece.fall_direction = board.gravity_direction
+				piece.position = Vector2(
+					OFFSET_X + col * CELL_SIZE + CELL_SIZE / 2,
+					OFFSET_Y + row * CELL_SIZE + CELL_SIZE / 2
+				)
+				piece.target_position = piece.position
+				
+				if piece.sprite:
+					piece.sprite.modulate = player.color
+
+func _highlight_selected_piece(row: int, col: int):
+	for piece in pieces:
+		if piece.grid_row == row and piece.grid_col == col and is_instance_valid(piece):
+			var tween = create_tween()
+			tween.tween_property(piece, "scale", Vector2(1.25, 1.25), 0.12)
+			tween.tween_property(piece, "scale", Vector2(0.0, 0.0), 0.18)
+			await tween.finished
+			return
+
+func _highlight_selected_line(index: int, is_column: bool):
+	var tweens := []
+	
+	for piece in pieces:
+		if not is_instance_valid(piece):
+			continue
+		
+		var match_line = false
+		if is_column:
+			match_line = piece.grid_col == index
+		else:
+			match_line = piece.grid_row == index
+		
+		if match_line:
+			var tween = create_tween()
+			tween.tween_property(piece, "modulate", Color(1, 0.2, 0.2, 1), 0.12)
+			tween.tween_property(piece, "scale", Vector2(0.0, 0.0), 0.18)
+			tweens.append(tween)
+	
+	await get_tree().create_timer(0.22).timeout
+
+func _on_reset_done():
+	if controller and controller.power_manager:
+		controller.power_manager.setup(controller.board, controller, self)
+	
+	rebuild_pieces_from_board()
+	_update_clickable_cells()
+	_update_hud()
+	queue_redraw()
+
 
 func _on_winner(player_id: int):
 	is_piece_falling = false

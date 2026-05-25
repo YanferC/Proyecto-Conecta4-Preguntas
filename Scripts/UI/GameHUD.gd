@@ -10,6 +10,7 @@ class_name GameHUD
 @onready var p2_energy_text: Label = $Player2Panel/P2EnergyText
 @onready var gravity_label: Label = $GravityLabel
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
+# @onready var power_button: Button = $PowerButton
 
 var player1_color := Color(0.6, 0.2, 0.8)
 var player2_color := Color(1.0, 0.3, 0.7)
@@ -18,6 +19,10 @@ func _ready():
 	# Crear animaciones
 	if not animation_player.has_animation("energy_full_p1"):
 		create_energy_full_animations()
+	
+	#if power_button:
+	#	power_button.pressed.connect(_on_power_button_pressed)
+	#	power_button.visible = false
 
 # ========== ACTUALIZAR TURNO ==========
 func update_turn(player_id: int, player_color: Color):
@@ -145,3 +150,28 @@ func create_energy_full_animations():
 	anim_library.add_animation("energy_full_p2", anim_p2)
 	
 	animation_player.add_animation_library("", anim_library)
+
+
+# ========== MOSTRAR/OCULTAR BOTÓN DE PODER ==========
+func show_power_button(show: bool, power_type: int = -1):
+	#if power_button:
+		#power_button.visible = show
+		
+		if show and power_type != -1:
+			var power_name = ""
+			match power_type:
+				Jugador.PowerType.STEAL_ENERGY:
+					power_name = "Robar Energía"
+				Jugador.PowerType.REMOVE_PIECE:
+					power_name = "Eliminar Ficha"
+				Jugador.PowerType.REMOVE_LINE:
+					power_name = "Eliminar Línea"
+				Jugador.PowerType.SKIP_TURN:
+					power_name = "Saltar Turno"
+			
+			#power_button.text = "💥 " + power_name
+			#power_button.modulate = Color(1, 0.84, 0)  # Dorado
+
+func _on_power_button_pressed():
+	# Esta señal debe conectarse a GameView
+	pass

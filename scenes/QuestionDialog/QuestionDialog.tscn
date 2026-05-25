@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://lwnisxukknc"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sjrib"]
+bg_color = Color(0.14901961, 0.14901961, 0.2, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.6, 0.3019608, 0.8, 1)
+corner_radius_top_left = 15
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+corner_radius_bottom_left = 15
+
+[node name="QuestionDialog" type="Control" unique_id=1631176389]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="." unique_id=1122637849]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.3254902)
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=1409412713]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_sjrib")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=1674118206]
+layout_mode = 2
+
+[node name="QuestionLabel" type="Label" parent="Panel/VBoxContainer" unique_id=2049760012]
+modulate = Color(1, 0.9019608, 0.42745098, 1)
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "¿Pregunta de ejemplo?"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="OptionsContainer" type="VBoxContainer" parent="Panel/VBoxContainer" unique_id=1909455865]
+layout_mode = 2
+
+[node name="OptionButton1" type="Button" parent="Panel/VBoxContainer/OptionsContainer" unique_id=987390316]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="OptionButton2" type="Button" parent="Panel/VBoxContainer/OptionsContainer" unique_id=1867682264]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="OptionButton3" type="Button" parent="Panel/VBoxContainer/OptionsContainer" unique_id=505065345]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="OptionButton4" type="Button" parent="Panel/VBoxContainer/OptionsContainer" unique_id=1555203317]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="FeedbackLabel" type="Label" parent="Panel/VBoxContainer" unique_id=802724912]
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/VBoxContainer" unique_id=828353178]
+layout_mode = 2
+
+[node name="SkipButton" type="Button" parent="Panel/VBoxContainer/HBoxContainer" unique_id=908000504]
+custom_minimum_size = Vector2(250, 45)
+layout_mode = 2
+text = "⏭ Saltar (sin penalización)"
+
+[node name="TimerLabel" type="Label" parent="Panel/VBoxContainer/HBoxContainer" unique_id=1122568269]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "⏱ Tiempo: 15s"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=87623171]

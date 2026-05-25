@@ -1,0 +1,141 @@
+[gd_scene format=3 uid="uid://2g4i1eybvgit"]
+
+[ext_resource type="Script" uid="uid://bw2enk4jru8tb" path="res://Scripts/services/PowerSelectionDialog.gd" id="1_dgkso"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ljwkb"]
+bg_color = Color(0.5576319, 0.6001579, 0.6987103, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dgkso"]
+bg_color = Color(0.6214092, 0.53240705, 0.8849254, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_omqov"]
+bg_color = Color(0.61960787, 0.53333336, 0.8862745, 1)
+
+[node name="PowerSelectionDialog" type="Control" unique_id=1652658430]
+z_index = 100
+z_as_relative = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dgkso")
+
+[node name="Panel" type="Panel" parent="." unique_id=1051419472]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ljwkb")
+
+[node name="TitleLabel" type="Label" parent="Panel" unique_id=128742379]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -117.0
+offset_top = 22.0
+offset_right = 118.0
+offset_bottom = 45.0
+grow_horizontal = 2
+text = "JUGADOR 1 - ¡ELIGE TU PODER!"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Panel" unique_id=178613359]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -30.0
+offset_bottom = 30.0
+grow_horizontal = 0
+text = "X
+"
+
+[node name="MediumPanel" type="Panel" parent="Panel" unique_id=35424765]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -175.0
+offset_right = 250.0
+offset_bottom = 175.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dgkso")
+
+[node name="Label" type="Label" parent="Panel/MediumPanel" unique_id=1047728609]
+layout_mode = 0
+offset_left = 51.0
+offset_top = 30.0
+offset_right = 215.0
+offset_bottom = 53.0
+text = "⚡ PODERES MEDIOS"
+horizontal_alignment = 1
+
+[node name="StealEnergyBtn" type="Button" parent="Panel/MediumPanel" unique_id=1088001011]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 95.0
+offset_right = 230.0
+offset_bottom = 145.0
+text = "🔋 Robar energía (2)"
+
+[node name="RemovePieceBtn" type="Button" parent="Panel/MediumPanel" unique_id=1372631464]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 197.0
+offset_right = 230.0
+offset_bottom = 247.0
+text = "🗑️ Eliminar ficha"
+
+[node name="HighPanel" type="Panel" parent="Panel" unique_id=1610365363]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -175.0
+offset_bottom = 175.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_omqov")
+
+[node name="Label" type="Label" parent="Panel/HighPanel" unique_id=1885455973]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -74.0
+offset_top = 30.0
+offset_right = 78.0
+offset_bottom = 53.0
+grow_horizontal = 2
+text = "💥 PODERES ALTOS"
+horizontal_alignment = 1
+
+[node name="RemoveLineBtn" type="Button" parent="Panel/HighPanel" unique_id=509355707]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 95.0
+offset_right = 230.0
+offset_bottom = 145.0
+text = "📏 Eliminar fila/columna"
+
+[node name="SkipTurnBtn" type="Button" parent="Panel/HighPanel" unique_id=396178615]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 197.0
+offset_right = 230.0
+offset_bottom = 247.0
+text = "⏭️ Saltar turno rival"

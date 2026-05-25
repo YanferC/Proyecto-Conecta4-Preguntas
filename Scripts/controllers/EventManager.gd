@@ -2,9 +2,9 @@ extends Node
 class_name EventManager
 
 # Configuración de probabilidades (suman 100)
-var gravity_chance := 40
-var block_column_chance := 40
-var rotation_chance := 20
+var gravity_chance := 45
+var block_column_chance := 45
+var rotation_chance := 10
 var turns_between_events := 4
 
 var turn_counter := 0
